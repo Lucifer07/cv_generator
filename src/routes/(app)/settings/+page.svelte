@@ -66,6 +66,7 @@
 
 	<form
 		method="POST"
+		action="?/save"
 		use:enhance
 		class="mt-8 flex flex-col gap-5 rounded-card border border-border bg-surface p-6"
 	>
@@ -119,15 +120,6 @@
 		</div>
 
 		<div class="flex items-center justify-end gap-3 pt-2">
-			{#if data.hasCredential}
-				<button
-					formaction="?/delete"
-					formmethod="POST"
-					class="inline-flex h-10 items-center rounded-control border border-border px-5 text-sm font-medium transition-colors hover:bg-accent-soft"
-				>
-					Remove
-				</button>
-			{/if}
 			<button
 				type="submit"
 				class="inline-flex h-10 items-center gap-2 rounded-control bg-accent px-5 text-sm font-medium text-surface transition-opacity hover:opacity-90"
@@ -137,4 +129,15 @@
 			</button>
 		</div>
 	</form>
+
+	{#if data.hasCredential}
+		<form method="POST" action="?/delete" use:enhance class="mt-3 flex items-center justify-end">
+			<button
+				type="submit"
+				class="inline-flex h-9 items-center rounded-control border border-border px-4 text-xs font-medium text-ink-muted transition-colors hover:bg-accent-soft"
+			>
+				Remove saved credentials
+			</button>
+		</form>
+	{/if}
 </div>

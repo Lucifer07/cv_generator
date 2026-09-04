@@ -28,19 +28,11 @@ export class CredentialRepository {
 		const { ciphertext, nonce } = encryptToken(apiToken);
 		const now = new Date().toISOString();
 
-		const row = await this.#db
-			.insertInto('ai_credentials')
-			.values({
-				user_id: userId,
-				endpoint_url: endpointUrl,
-				api_token_cipher: ciphertext,
-				api_token_nonce: nonce,
-				model,
-				last_verified_at: now,
-				updated_at: now
-			})
-			.onConflict((oc) =>
-				oc.column('user_id').doUpdateSet({
+		const existing = await this.getCredential(userId);
+		if (existing) {
+			await this.#db
+				.updateTable('ai_credentials')
+				.set({
 					endpoint_url: endpointUrl,
 					api_token_cipher: ciphertext,
 					api_token_nonce: nonce,
@@ -48,11 +40,26 @@ export class CredentialRepository {
 					last_verified_at: now,
 					updated_at: now
 				})
-			)
-			.returningAll()
-			.executeTakeFirstOrThrow();
+				.where('user_id', '=', userId)
+				.execute();
+		} else {
+			await this.#db
+				.insertInto('ai_credentials')
+				.values({
+					user_id: userId,
+					endpoint_url: endpointUrl,
+					api_token_cipher: ciphertext,
+					api_token_nonce: nonce,
+					model,
+					last_verified_at: now,
+					updated_at: now
+				})
+				.execute();
+		}
 
-		return row as CredentialRow;
+		const row = await this.getCredential(userId);
+		if (!row) throw new Error('Failed to persist credential');
+		return row;
 	}
 
 	async getCredential(userId: string): Promise<CredentialRow | null> {

@@ -38,18 +38,14 @@ export async function findUserByEmail(email: string): Promise<UserRecord | null>
 }
 
 export async function createUser(email: string, password: string): Promise<UserRecord> {
-	const passwordHash = hashPassword(password);
-	const row = await getDb()
-		.insertInto('users')
-		.values({
-			id: crypto.randomUUID(),
-			email: email.toLowerCase(),
-			password_hash: passwordHash,
-			created_at: new Date().toISOString()
-		})
-		.returningAll()
-		.executeTakeFirstOrThrow();
-	return row as UserRecord;
+	const user: UserRecord = {
+		id: crypto.randomUUID(),
+		email: email.toLowerCase(),
+		password_hash: hashPassword(password),
+		created_at: new Date().toISOString()
+	};
+	await getDb().insertInto('users').values(user).execute();
+	return user;
 }
 
 export async function findUserById(id: string): Promise<UserRecord | null> {

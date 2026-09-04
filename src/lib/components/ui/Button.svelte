@@ -4,9 +4,11 @@
 	import Fa from 'svelte-fa';
 
 	type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+	type Size = 'sm' | 'md';
 
 	interface Props {
 		variant?: Variant;
+		size?: Size;
 		type?: 'button' | 'submit' | 'reset';
 		icon?: IconDefinition;
 		iconRight?: IconDefinition;
@@ -20,6 +22,7 @@
 
 	let {
 		variant = 'primary',
+		size = 'md',
 		type = 'button',
 		icon,
 		iconRight,
@@ -31,8 +34,12 @@
 		children
 	}: Props = $props();
 
+	const sizeClasses: Record<Size, string> = {
+		sm: 'h-8 px-3 text-xs',
+		md: 'h-10 px-5 text-sm'
+	};
 	const base =
-		'inline-flex h-10 items-center justify-center gap-2 rounded-control px-5 text-sm font-medium transition-colors focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50';
+		'inline-flex items-center justify-center gap-2 rounded-control font-medium transition-colors focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50';
 
 	const variants: Record<Variant, string> = {
 		primary: 'bg-accent text-surface hover:opacity-90',
@@ -41,7 +48,7 @@
 		danger: 'border border-border bg-surface text-red-600 hover:bg-red-50'
 	};
 
-	const cls = $derived(`${base} ${variants[variant]}`);
+	const cls = $derived(`${base} ${sizeClasses[size]} ${variants[variant]}`);
 </script>
 
 <button

@@ -60,7 +60,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	save: async ({ request, locals }) => {
 		if (!locals.session) return fail(401, { message: 'Not authenticated.' });
 
 		const form = await request.formData();
