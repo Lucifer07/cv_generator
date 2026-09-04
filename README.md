@@ -26,11 +26,11 @@ bun run dev
 
 ## Scripts
 
-| Command            | Purpose                          |
-| ------------------ | -------------------------------- |
-| `bun run dev`      | Start the dev server             |
-| `bun run build`    | Production build                 |
-| `bun run preview`  | Preview the production build     |
-| `bun run lint`     | Prettier + ESLint                |
-| `bun run check`    | svelte-check (typecheck)         |
-| `bun run format`   | Format the codebase              |
+| Command           | Purpose                      |
+| ----------------- | ---------------------------- |
+| `bun run dev`     | Start the dev server         |
+| `bun run build`   | Production build             |
+| `bun run preview` | Preview the production build |
+| `bun run lint`    | Prettier + ESLint            |
+| `bun run check`   | svelte-check (typecheck)     |
+| `bun run format`  | Format the codebase          |
