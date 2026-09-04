@@ -45,6 +45,7 @@
 		"jsonwebtoken": "^9.0.3",
 		"kysely": "^0.29.5",
 		"mysql2": "^3.24.3",
-		"svelte-fa": "^4.0.4"
+		"svelte-fa": "^4.0.4",
+		"zod": "^4.5.4"
 	}
 }
