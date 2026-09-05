@@ -3,6 +3,7 @@
 	import TextField from '$lib/components/ui/TextField.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { icons } from '$lib/icons';
+	import { toDateInputValue } from '$lib/utils/dates';
 	import type { ResumeDocument } from '$lib/stores/resumeDocument.svelte';
 
 	interface Props {
@@ -54,14 +55,14 @@
 					id={`edu-${index}-start`}
 					label="Start"
 					type="date"
-					value={item.start}
+					value={toDateInputValue(item.start)}
 					oninput={(v) => doc.updateEducation(index, { start: v })}
 				/>
 				<TextField
 					id={`edu-${index}-end`}
 					label="End"
 					type="date"
-					value={item.end}
+					value={toDateInputValue(item.end)}
 					oninput={(v) => doc.updateEducation(index, { end: v })}
 				/>
 			</div>

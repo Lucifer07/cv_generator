@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ResumeData } from '$lib/schemas/resume';
+	import { dateSortKey, formatDateLabel } from '$lib/utils/dates';
 
 	interface Props {
 		data: ResumeData;
@@ -7,10 +8,20 @@
 	let { data }: Props = $props();
 
 	function formatDateRange(start: string, end: string, current: boolean): string {
-		const startStr = start || '—';
+		const startStr = formatDateLabel(start) || '—';
 		if (current) return `${startStr} — Present`;
-		return `${startStr} — ${end || '—'}`;
+		return `${startStr} — ${formatDateLabel(end) || '—'}`;
 	}
+
+	const experienceSorted = $derived(
+		[...data.experience].sort(
+			(a, b) => dateSortKey(b.start, b.current) - dateSortKey(a.start, a.current)
+		)
+	);
+
+	const educationSorted = $derived(
+		[...data.education].sort((a, b) => dateSortKey(b.start) - dateSortKey(a.start))
+	);
 </script>
 
 <article
@@ -42,7 +53,7 @@
 		<section class="mt-5">
 			<h2 class="text-xs font-semibold tracking-widest text-ink-muted uppercase">Experience</h2>
 			<ul class="mt-2 flex flex-col gap-4">
-				{#each data.experience as item, i (i)}
+				{#each experienceSorted as item, i (i)}
 					<li>
 						<div class="flex items-baseline justify-between gap-3">
 							<p class="font-medium">{item.role || 'Role'}</p>
@@ -70,7 +81,7 @@
 		<section class="mt-5">
 			<h2 class="text-xs font-semibold tracking-widest text-ink-muted uppercase">Education</h2>
 			<ul class="mt-2 flex flex-col gap-3">
-				{#each data.education as item, i (i)}
+				{#each educationSorted as item, i (i)}
 					<li>
 						<div class="flex items-baseline justify-between gap-3">
 							<p class="font-medium">{item.degree || 'Degree'}</p>
