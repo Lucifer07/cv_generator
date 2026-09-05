@@ -8,7 +8,6 @@
 	import ProjectsSection from '$lib/components/resume/ProjectsSection.svelte';
 	import SkillsSection from '$lib/components/resume/SkillsSection.svelte';
 	import ResumePreview from '$lib/components/resume/ResumePreview.svelte';
-	import AiPanel from '$lib/components/resume/AiPanel.svelte';
 	import AiChatAssistant from '$lib/components/resume/AiChatAssistant.svelte';
 	import { ResumeDocument } from '$lib/stores/resumeDocument.svelte';
 	import { icons } from '$lib/icons';
@@ -18,8 +17,6 @@
 
 	type Section = 'basics' | 'experience' | 'education' | 'skills' | 'projects';
 	let activeSection: Section = $state('basics');
-	let jobDescription = $state('');
-	let selectedBullets = $state<string[]>([]);
 
 	const initial = untrack(() => ({
 		id: data.resume.id,
@@ -66,21 +63,6 @@
 	const defaultModel = untrack(
 		() => (data as { defaultModel?: string | null }).defaultModel ?? null
 	);
-
-	function applySummary(text: string) {
-		doc.updateBasics('summary', text.trim());
-	}
-
-	function applyRewrite(text: string) {
-		const rewritten = text
-			.split('\n')
-			.map((l) => l.replace(/^\s*[-*•]\s*/, '').trim())
-			.filter((l) => l.length > 0);
-		if (rewritten.length === 0) return;
-		const lastIndex = doc.experience.length - 1;
-		if (lastIndex < 0) return;
-		doc.updateExperience(lastIndex, { bullets: rewritten });
-	}
 
 	async function applyStrategy(
 		strategy: 'summary' | 'rewrite' | 'tailor' | 'review' | 'chat',
@@ -171,7 +153,7 @@
 				{#if activeSection === 'basics'}
 					<BasicsSection {doc} />
 				{:else if activeSection === 'experience'}
-					<ExperienceSection {doc} {selectedBullets} />
+					<ExperienceSection {doc} />
 				{:else if activeSection === 'education'}
 					<EducationSection {doc} />
 				{:else if activeSection === 'skills'}
@@ -181,56 +163,7 @@
 				{/if}
 			</section>
 
-			{#if hasCredentials}
-				<section class="rounded-card border border-border bg-surface p-6">
-					{#if activeSection === 'basics'}
-						<AiPanel
-							strategy="summary"
-							data={doc.data}
-							onApply={applySummary}
-							model={defaultModel}
-						/>
-					{:else if activeSection === 'experience'}
-						<div class="flex flex-col gap-4">
-							<AiPanel
-								strategy="rewrite"
-								data={doc.data}
-								context={{ selectedBullets }}
-								onApply={applyRewrite}
-								model={defaultModel}
-							/>
-							<div class="flex flex-col gap-2">
-								<label for="ai-jd" class="text-sm font-medium">Job description (for tailor)</label>
-								<textarea
-									id="ai-jd"
-									rows="3"
-									bind:value={jobDescription}
-									placeholder="Paste the role's job description here"
-									class="min-h-20 rounded-control border border-border bg-surface px-3 py-2 text-sm leading-6 outline-none focus-visible:outline"
-								></textarea>
-								<AiPanel
-									strategy="tailor"
-									data={doc.data}
-									context={{ jobDescription, selectedBullets }}
-									onApply={(text) => {
-										const lastIndex = doc.experience.length - 1;
-										if (lastIndex >= 0) {
-											doc.updateExperience(lastIndex, {
-												bullets: [...doc.experience[lastIndex].bullets, text]
-											});
-										} else {
-											doc.addExperience();
-										}
-									}}
-									model={defaultModel}
-								/>
-							</div>
-						</div>
-					{:else if activeSection === 'skills' || activeSection === 'projects' || activeSection === 'education'}
-						<AiPanel strategy="review" data={doc.data} onApply={() => {}} model={defaultModel} />
-					{/if}
-				</section>
-			{:else}
+			{#if !hasCredentials}
 				<div
 					class="rounded-card border border-dashed border-border bg-surface-alt p-6 text-sm leading-6"
 				>

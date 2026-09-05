@@ -7,17 +7,8 @@
 
 	interface Props {
 		doc: ResumeDocument;
-		selectedBullets?: string[];
 	}
-	let { doc, selectedBullets = $bindable([]) }: Props = $props();
-
-	function toggleSelect(text: string) {
-		if (selectedBullets.includes(text)) {
-			selectedBullets = selectedBullets.filter((b) => b !== text);
-		} else {
-			selectedBullets = [...selectedBullets, text];
-		}
-	}
+	let { doc }: Props = $props();
 </script>
 
 <div class="flex flex-col gap-5">
@@ -27,13 +18,6 @@
 			Add role
 		</Button>
 	</div>
-
-	{#if selectedBullets.length > 0}
-		<p class="text-xs text-ink-muted">
-			{selectedBullets.length} bullet{selectedBullets.length === 1 ? '' : 's'} selected for AI rewrite.
-			Click a highlight to toggle.
-		</p>
-	{/if}
 
 	{#if doc.experience.length === 0}
 		<p class="text-sm text-ink-muted">No work experience yet. Add your first role.</p>
@@ -98,21 +82,6 @@
 				<p class="text-sm font-medium">Highlights</p>
 				{#each item.bullets as bullet, bi (bi)}
 					<div class="flex items-start gap-2">
-						<button
-							type="button"
-							class="mt-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-accent-soft {selectedBullets.includes(
-								bullet
-							)
-								? 'bg-accent text-surface'
-								: ''}"
-							aria-label={selectedBullets.includes(bullet)
-								? 'Deselect bullet for AI rewrite'
-								: 'Select bullet for AI rewrite'}
-							aria-pressed={selectedBullets.includes(bullet)}
-							onclick={() => toggleSelect(bullet)}
-						>
-							<Fa icon={icons.success} class="h-3.5 w-3.5" />
-						</button>
 						<TextField
 							id={`exp-${index}-bullet-${bi}`}
 							label=""
@@ -125,7 +94,7 @@
 							type="button"
 							aria-label="Remove bullet"
 							onclick={() => doc.removeBullet(index, bi)}
-							class="mt-2 inline-flex h-7 w-7 items-center justify-center rounded-control text-ink-muted hover:bg-accent-soft"
+							class="mt-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-ink-muted hover:bg-accent-soft"
 						>
 							<Fa icon={icons.dismiss} class="h-3.5 w-3.5" />
 						</button>

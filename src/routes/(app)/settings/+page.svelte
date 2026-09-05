@@ -121,7 +121,7 @@
 			return async ({ result, update }) => {
 				testing = false;
 				saving = false;
-				await update();
+				await update({ reset: false });
 				if (result.type === 'success' && result.data && 'verified' in (result.data ?? {})) {
 					verifiedAt = Date.now();
 					verifiedKey = `${endpoint}|${model}|${token.length > 0 ? 'token' : 'existing'}`;
