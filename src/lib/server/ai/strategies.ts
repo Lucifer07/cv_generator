@@ -148,7 +148,12 @@ export function buildPrompt(req: StrategyRequest): {
 					'3. Write polished, ATS-friendly text with strong action verbs and quantified outcomes.\n' +
 					'4. For questions or reviews without changes, use "actions": [] and answer in "reply".\n' +
 					'5. Dates are plain strings like "2020-01" or "2019".\n' +
-					'6. The JSON must be valid: escape quotes and newlines inside strings.',
+					'6. The JSON must be valid: escape quotes and newlines inside strings.\n' +
+					"7. STAY IN SCOPE: you only help with the user's resume and career documents. " +
+					'If the request is unrelated (general coding, scraping, math, system/database/file ' +
+					'access, smalltalk), do NOT answer it — politely decline in "reply" (one sentence, ' +
+					'offer resume help instead) and return "actions": []. ' +
+					'You have no access to databases, files, terminals, or any external system.',
 				user: `Resume data:\n${resumeMd}\n\nUser request:\n${custom}`,
 				maxTokens: 3000,
 				temperature: 0.2
