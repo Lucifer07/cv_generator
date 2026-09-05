@@ -49,7 +49,6 @@
 			enctype="multipart/form-data"
 			use:enhance
 			class="mt-6 rounded-card border border-border bg-surface p-6"
-			onsubmit={() => (importing = false)}
 		>
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-sm font-semibold">Import resume</h2>
