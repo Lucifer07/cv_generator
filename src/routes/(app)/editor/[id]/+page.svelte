@@ -116,6 +116,16 @@
 					· {new Date(doc.lastSavedAt).toLocaleTimeString()}
 				{/if}
 			</span>
+			<button
+				type="button"
+				onclick={() => doc.save()}
+				disabled={doc.saveState === 'saving' ||
+					(doc.saveState !== 'dirty' && doc.saveState !== 'error')}
+				class="inline-flex h-10 items-center gap-2 rounded-control border border-border px-4 text-sm font-medium transition-colors hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				<Fa icon={icons.success} class="h-4 w-4" />
+				Save
+			</button>
 			<a
 				href={resolve(`/editor/${data.resume.id}/print`)}
 				class="inline-flex h-10 items-center gap-2 rounded-control border border-border px-4 text-sm font-medium transition-colors hover:bg-accent-soft"
