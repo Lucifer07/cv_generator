@@ -8,12 +8,15 @@ import { resumeDataSchema } from '$lib/schemas/resume';
  */
 export function resumeDataFromAiReply(reply: string): ResumeData | null {
 	const withoutFences = reply.replace(/```(?:json)?/gi, '');
-	const start = withoutFences.indexOf('{');
-	const end = withoutFences.lastIndexOf('}');
+	// Reasoning models sometimes inline their thinking in the content itself.
+	const withoutThink = withoutFences.replace(/<think>[\s\S]*?<\/think>/gi, '');
+	const haystack = withoutThink.length > withoutFences.length ? withoutFences : withoutThink;
+	const start = haystack.indexOf('{');
+	const end = haystack.lastIndexOf('}');
 	if (start === -1 || end === -1 || end <= start) return null;
 	let parsed: unknown;
 	try {
-		parsed = JSON.parse(withoutFences.slice(start, end + 1));
+		parsed = JSON.parse(haystack.slice(start, end + 1));
 	} catch {
 		return null;
 	}

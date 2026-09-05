@@ -52,6 +52,12 @@ export async function completeChat(userId: string, req: ChatRequest): Promise<st
 			if (delta) out += delta;
 		}
 	}
+	if (out.trim().length === 0) {
+		throw new Error(
+			'the model returned no content. Reasoning models can exhaust the token budget on ' +
+				'internal reasoning — try a larger max_tokens or a non-reasoning model.'
+		);
+	}
 	return out;
 }
 

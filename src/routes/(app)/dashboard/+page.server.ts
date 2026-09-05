@@ -102,7 +102,8 @@ export const actions: Actions = {
 		if (!content) {
 			return fail(502, {
 				message:
-					'The AI reply could not be parsed into resume fields. Try again or use a different model.'
+					`The AI reply could not be parsed into resume fields (received ${reply.length} chars). ` +
+					'Reasoning models may exhaust their token budget and truncate the JSON — try again or use a different model.'
 			});
 		}
 

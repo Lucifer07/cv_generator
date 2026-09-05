@@ -69,7 +69,7 @@ export function buildPrompt(req: StrategyRequest): {
 					'Write a 3–4 sentence professional summary for this candidate. ' +
 					'Tone: confident, specific, no clichés. Resume data:\n' +
 					resumeMd,
-				maxTokens: 220,
+				maxTokens: 1200,
 				temperature: 0.5
 			};
 		}
@@ -85,7 +85,7 @@ export function buildPrompt(req: StrategyRequest): {
 					'Rewrite each numbered bullet to be stronger, more specific, and outcome-oriented. ' +
 					'Output one bullet per line, preserving the order. Do not number them. Bullets:\n' +
 					block,
-				maxTokens: 420,
+				maxTokens: 2000,
 				temperature: 0.4
 			};
 		}
@@ -104,7 +104,7 @@ export function buildPrompt(req: StrategyRequest): {
 					'Resume:\n' +
 					resumeMd +
 					(jd ? `\n\nJob description:\n${jd}` : ''),
-				maxTokens: 700,
+				maxTokens: 3000,
 				temperature: 0.4
 			};
 		}
@@ -117,7 +117,7 @@ export function buildPrompt(req: StrategyRequest): {
 					'Focus on impact, clarity, and ATS-friendliness. Resume:\n' +
 					resumeMd +
 					focus,
-				maxTokens: 500,
+				maxTokens: 2500,
 				temperature: 0.3
 			};
 		}
@@ -129,7 +129,7 @@ export function buildPrompt(req: StrategyRequest): {
 					'\n\nYou are helping edit a resume. Use the resume data as context. ' +
 					'If the user asks to change something, propose the exact new text and explain briefly.',
 				user: `Resume data:\n${resumeMd}\n\nUser request:\n${custom}`,
-				maxTokens: 800,
+				maxTokens: 3000,
 				temperature: 0.4
 			};
 		}
@@ -151,7 +151,7 @@ export function buildPrompt(req: StrategyRequest): {
 					'objective summary only if the text implies one, otherwise empty string. ' +
 					'Output ONLY the JSON object. No markdown fences, no commentary.',
 				user: 'Resume text:\n' + custom.slice(0, 12_000),
-				maxTokens: 1600,
+				maxTokens: 8000,
 				temperature: 0.1
 			};
 		}
