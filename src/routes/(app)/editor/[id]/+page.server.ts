@@ -29,7 +29,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 export const actions: Actions = {
 	save: async ({ request, locals, params }) => {
 		if (!locals.session) return fail(401, { message: 'Not authenticated' });
-		const body = (await request.json()) as { content?: unknown; title?: string };
+		const form = await request.formData();
+		const contentRaw = form.get('content');
+		if (!contentRaw) return fail(400, { message: 'Missing content' });
+		const body = {
+			content: JSON.parse(String(contentRaw)) as unknown,
+			title: form.get('title') ? String(form.get('title')) : undefined
+		};
 		const data = parseResumeContent(body.content);
 
 		const repo = new ResumeRepository(getDb());

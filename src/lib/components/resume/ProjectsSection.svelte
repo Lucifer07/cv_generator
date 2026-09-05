@@ -2,6 +2,7 @@
 	import Fa from 'svelte-fa';
 	import TextField from '$lib/components/ui/TextField.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { icons } from '$lib/icons';
 	import type { ResumeDocument } from '$lib/stores/resumeDocument.svelte';
 
@@ -29,14 +30,22 @@
 		<div class="rounded-card border border-border p-4">
 			<div class="flex items-start justify-between gap-3">
 				<p class="text-xs font-medium text-ink-muted">Project {index + 1}</p>
-				<button
-					type="button"
-					aria-label="Remove project"
-					onclick={() => doc.removeProject(index)}
-					class="inline-flex h-7 w-7 items-center justify-center rounded-control text-ink-muted hover:bg-accent-soft"
+				<ConfirmDialog
+					title="Remove project?"
+					description={`"${item.name || 'Project ' + (index + 1)}" will be removed from your CV.`}
+					onConfirm={() => doc.removeProject(index)}
 				>
-					<Fa icon={icons.dismiss} class="h-3.5 w-3.5" />
-				</button>
+					{#snippet children(open)}
+						<button
+							type="button"
+							aria-label="Remove project"
+							onclick={() => open()}
+							class="inline-flex h-7 w-7 items-center justify-center rounded-control text-danger transition-colors hover:bg-danger-soft"
+						>
+							<Fa icon={icons.trash} class="h-3.5 w-3.5" />
+						</button>
+					{/snippet}
+				</ConfirmDialog>
 			</div>
 
 			<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">

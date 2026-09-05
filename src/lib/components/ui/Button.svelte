@@ -39,13 +39,13 @@
 		md: 'h-10 px-5 text-sm'
 	};
 	const base =
-		'inline-flex items-center justify-center gap-2 rounded-control font-medium transition-colors focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50';
+		'inline-flex items-center justify-center gap-2 rounded-control font-medium transition-all duration-200 focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]';
 
 	const variants: Record<Variant, string> = {
-		primary: 'bg-accent text-surface hover:opacity-90',
+		primary: 'bg-accent text-surface shadow-card hover:shadow-float hover:opacity-90',
 		secondary: 'border border-border bg-surface hover:bg-accent-soft',
 		ghost: 'hover:bg-accent-soft',
-		danger: 'border border-border bg-surface text-red-600 hover:bg-red-50'
+		danger: 'border border-border bg-surface text-danger hover:bg-danger-soft'
 	};
 
 	const cls = $derived(`${base} ${sizeClasses[size]} ${variants[variant]}`);

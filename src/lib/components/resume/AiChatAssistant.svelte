@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { fly } from 'svelte/transition';
 	import Fa from 'svelte-fa';
 	import { icons } from '$lib/icons';
 	import { parseAssistantResponse } from '$lib/schemas/ai';
@@ -15,7 +16,7 @@
 
 	let { onApplyStrategy, onApplyEdits, disabled = false }: Props = $props();
 
-	let open = $state(false);
+	let open = $state(true);
 	let messages = $state<Array<{ role: 'user' | 'assistant'; content: string; applied?: number }>>(
 		[]
 	);
@@ -127,23 +128,10 @@
 </script>
 
 <div class="fixed right-6 bottom-6 z-50" aria-label="AI Assistant">
-	<button
-		type="button"
-		onclick={() => (open = !open)}
-		class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-accent text-surface shadow-lg transition-all hover:scale-105 focus-visible:outline"
-		aria-label={open ? 'Close AI Assistant' : 'Open AI Assistant'}
-		aria-expanded={open}
-	>
-		{#if open}
-			<Fa icon={icons.dismiss} class="h-6 w-6" />
-		{:else}
-			<Fa icon={icons.ai} class="h-6 w-6" />
-		{/if}
-	</button>
-
 	{#if open}
 		<div
-			class="absolute right-0 bottom-full mb-3 flex max-h-[70vh] w-96 flex-col overflow-hidden rounded-card border border-border bg-surface shadow-xl"
+			transition:fly={{ y: 16, duration: 250, easing: (t) => 1 - Math.pow(1 - t, 3) }}
+			class="flex w-96 max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-card border border-border bg-surface shadow-float"
 			role="dialog"
 			aria-label="AI Assistant"
 		>
@@ -157,16 +145,19 @@
 				<button
 					type="button"
 					onclick={() => (open = false)}
-					class="inline-flex h-8 w-8 items-center justify-center rounded-control text-ink-muted hover:bg-accent-soft"
-					aria-label="Close"
+					class="inline-flex h-8 w-8 items-center justify-center rounded-control text-ink-muted transition-colors hover:bg-accent-soft"
+					aria-label="Minimize AI Assistant"
 				>
 					<Fa icon={icons.dismiss} class="h-4 w-4" />
 				</button>
 			</header>
 
-			<div class="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+			<div class="flex max-h-[45vh] flex-1 flex-col gap-3 overflow-y-auto p-4">
 				{#each messages as msg, idx (idx)}
-					<div class="flex gap-2 {msg.role === 'user' ? 'justify-end' : ''}">
+					<div
+						in:fly={{ y: 8, duration: 200, easing: (t) => 1 - Math.pow(1 - t, 3) }}
+						class="flex gap-2 {msg.role === 'user' ? 'justify-end' : ''}"
+					>
 						<div
 							class="max-w-[80%] rounded-lg px-3 py-2 text-sm leading-5 {msg.role === 'user'
 								? 'bg-accent text-surface'
@@ -209,7 +200,7 @@
 							type="button"
 							onclick={() => runQuickAction(action.id)}
 							disabled={streaming || disabled}
-							class="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-ink-muted hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-50"
+							class="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-ink-muted transition-all hover:bg-accent-soft hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							<Fa icon={action.icon} class="h-3.5 w-3.5" />
 							{action.label}
@@ -223,7 +214,7 @@
 						bind:value={input}
 						onkeydown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
 						placeholder="Ask me to review, rewrite, or tailor your CV…"
-						class="h-10 flex-1 rounded-control border border-border bg-surface px-3 text-sm outline-none focus-visible:outline disabled:opacity-50"
+						class="h-10 flex-1 rounded-control border border-border bg-surface px-3 text-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ink/20 focus-visible:outline disabled:opacity-50"
 						disabled={streaming || disabled}
 						aria-label="Chat message"
 					/>
@@ -231,7 +222,7 @@
 						type="button"
 						onclick={sendMessage}
 						disabled={!input.trim() || streaming || disabled}
-						class="inline-flex h-10 items-center gap-2 rounded-control bg-accent px-4 text-sm font-medium text-surface transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+						class="inline-flex h-10 items-center gap-2 rounded-control bg-accent px-4 text-sm font-medium text-surface transition-all hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 						aria-label="Send"
 					>
 						<Fa icon={icons.send} class="h-4 w-4" />
@@ -239,5 +230,16 @@
 				</div>
 			</footer>
 		</div>
+	{:else}
+		<button
+			type="button"
+			onclick={() => (open = true)}
+			class="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-medium shadow-float transition-all duration-300 hover:scale-105 hover:shadow-card-hover focus-visible:outline active:scale-95"
+			aria-label="Open AI Assistant"
+			aria-expanded={open}
+		>
+			<Fa icon={icons.ai} class="h-4 w-4" />
+			AI Assistant
+		</button>
 	{/if}
 </div>

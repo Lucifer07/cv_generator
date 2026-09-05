@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import Fa from 'svelte-fa';
 	import { icons } from '$lib/icons';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -13,6 +14,7 @@
 	let saving = $state(false);
 	let verifiedAt = $state<number | null>(null);
 	let verifiedKey = $state<string>('');
+	let deleteForm = $state<HTMLFormElement | undefined>(undefined);
 
 	$effect(() => {
 		if (form && 'success' in form && form.success) {
@@ -50,7 +52,7 @@
 	<title>Settings | CV Generator</title>
 </svelte:head>
 
-<div class="mx-auto w-full max-w-3xl px-6 py-12">
+<div class="mx-auto w-full max-w-3xl animate-fade-in-up px-6 py-12">
 	<h1 class="text-2xl font-semibold tracking-tight">AI credentials</h1>
 	<p class="mt-2 text-sm leading-6 text-ink-muted">
 		Connect an OpenAI-compatible endpoint. Your token is encrypted at rest and never returned to
@@ -58,7 +60,7 @@
 	</p>
 
 	{#if data.hasCredential && !fieldsChanged && !form?.success}
-		<div class="mt-8 rounded-card border border-border bg-surface p-5">
+		<div class="mt-8 rounded-card border border-border bg-surface p-5 shadow-card">
 			<div class="flex items-start gap-3">
 				<Fa icon={icons.success} class="mt-0.5 h-4 w-4 shrink-0" />
 				<div class="min-w-0">
@@ -128,7 +130,7 @@
 				}
 			};
 		}}
-		class="mt-8 flex flex-col gap-5 rounded-card border border-border bg-surface p-6"
+		class="mt-8 flex flex-col gap-5 rounded-card border border-border bg-surface p-6 shadow-card"
 	>
 		<h2 class="text-sm font-semibold">
 			{data.hasCredential ? 'Update credentials' : 'Add credentials'}
@@ -145,7 +147,7 @@
 				placeholder="https://api.openai.com/v1"
 				bind:value={endpoint}
 				required
-				class="h-10 rounded-control border border-border bg-surface px-3 text-sm outline-none focus-visible:outline"
+				class="h-10 rounded-control border border-border bg-surface px-3 text-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ink/20 focus-visible:outline"
 			/>
 			<p class="text-xs text-ink-muted">
 				Use the base URL. Do not include a path like <code>/chat/completions</code>.
@@ -163,7 +165,7 @@
 				bind:value={token}
 				required={!data.hasCredential}
 				autocomplete="off"
-				class="h-10 rounded-control border border-border bg-surface px-3 text-sm outline-none focus-visible:outline"
+				class="h-10 rounded-control border border-border bg-surface px-3 text-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ink/20 focus-visible:outline"
 			/>
 			<p class="text-xs text-ink-muted">
 				Stored encrypted with AES-256-GCM. The token is never sent to the browser after submission.
@@ -181,7 +183,7 @@
 				placeholder="gpt-4o-mini"
 				bind:value={model}
 				required
-				class="h-10 rounded-control border border-border bg-surface px-3 text-sm outline-none focus-visible:outline"
+				class="h-10 rounded-control border border-border bg-surface px-3 text-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ink/20 focus-visible:outline"
 			/>
 			<p class="text-xs text-ink-muted">
 				Will be used for AI features. You can override per-request in the editor.
@@ -215,13 +217,30 @@
 	</form>
 
 	{#if data.hasCredential}
-		<form method="POST" action="?/delete" use:enhance class="mt-3 flex items-center justify-end">
-			<button
-				type="submit"
-				class="inline-flex h-9 items-center rounded-control border border-border px-4 text-xs font-medium text-ink-muted transition-colors hover:bg-accent-soft"
+		<form
+			method="POST"
+			action="?/delete"
+			use:enhance
+			bind:this={deleteForm}
+			class="mt-3 flex items-center justify-end"
+		>
+			<ConfirmDialog
+				title="Remove saved credentials?"
+				description="Your AI endpoint and token will be deleted. AI features will be disabled until you reconfigure them."
+				confirmLabel="Remove"
+				onConfirm={() => deleteForm?.requestSubmit()}
 			>
-				Remove saved credentials
-			</button>
+				{#snippet children(open)}
+					<button
+						type="button"
+						onclick={() => open()}
+						class="inline-flex h-9 items-center gap-2 rounded-control border border-border px-4 text-xs font-medium text-danger transition-colors hover:bg-danger-soft"
+					>
+						<Fa icon={icons.trash} class="h-3.5 w-3.5" />
+						Remove saved credentials
+					</button>
+				{/snippet}
+			</ConfirmDialog>
 		</form>
 	{/if}
 </div>

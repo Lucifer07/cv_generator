@@ -48,7 +48,7 @@
 			{rows}
 			{value}
 			oninput={handle}
-			class="min-h-20 rounded-control border border-border bg-surface px-3 py-2 text-sm leading-6 outline-none focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50"
+			class="min-h-20 rounded-control border border-border bg-surface px-3 py-2 text-sm leading-6 transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ink/20 focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50"
 		></textarea>
 	{:else}
 		<input
@@ -59,7 +59,7 @@
 			{disabled}
 			{value}
 			oninput={handle}
-			class="h-10 rounded-control border border-border bg-surface px-3 text-sm outline-none focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50"
+			class="h-10 rounded-control border border-border bg-surface px-3 text-sm transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-ink/20 focus-visible:outline disabled:cursor-not-allowed disabled:opacity-50"
 		/>
 	{/if}
 	{#if hint}<p class="text-xs text-ink-muted">{hint}</p>{/if}

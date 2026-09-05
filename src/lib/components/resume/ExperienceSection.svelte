@@ -1,9 +1,10 @@
 <script lang="ts">
 	import Fa from 'svelte-fa';
 	import TextField from '$lib/components/ui/TextField.svelte';
+	import DateField from '$lib/components/ui/DateField.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { icons } from '$lib/icons';
-	import { toDateInputValue } from '$lib/utils/dates';
 	import type { ResumeDocument } from '$lib/stores/resumeDocument.svelte';
 
 	interface Props {
@@ -28,14 +29,22 @@
 		<div class="rounded-card border border-border p-4">
 			<div class="flex items-start justify-between gap-3">
 				<p class="text-xs font-medium text-ink-muted">Role {index + 1}</p>
-				<button
-					type="button"
-					aria-label="Remove role"
-					onclick={() => doc.removeExperience(index)}
-					class="inline-flex h-7 w-7 items-center justify-center rounded-control text-ink-muted hover:bg-accent-soft"
+				<ConfirmDialog
+					title="Remove role?"
+					description={`"${item.role || 'Role ' + (index + 1)}" will be removed from your CV.`}
+					onConfirm={() => doc.removeExperience(index)}
 				>
-					<Fa icon={icons.dismiss} class="h-3.5 w-3.5" />
-				</button>
+					{#snippet children(open)}
+						<button
+							type="button"
+							aria-label="Remove role"
+							onclick={() => open()}
+							class="inline-flex h-7 w-7 items-center justify-center rounded-control text-danger transition-colors hover:bg-danger-soft"
+						>
+							<Fa icon={icons.trash} class="h-3.5 w-3.5" />
+						</button>
+					{/snippet}
+				</ConfirmDialog>
 			</div>
 
 			<div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -51,20 +60,18 @@
 					value={item.role}
 					oninput={(v) => doc.updateExperience(index, { role: v })}
 				/>
-				<TextField
+				<DateField
 					id={`exp-${index}-start`}
 					label="Start"
-					type="date"
-					value={toDateInputValue(item.start)}
-					oninput={(v) => doc.updateExperience(index, { start: v })}
+					value={item.start}
+					onchange={(v) => doc.updateExperience(index, { start: v })}
 				/>
-				<TextField
+				<DateField
 					id={`exp-${index}-end`}
 					label="End"
-					type="date"
-					value={toDateInputValue(item.end)}
+					value={item.end}
 					disabled={item.current}
-					oninput={(v) => doc.updateExperience(index, { end: v })}
+					onchange={(v) => doc.updateExperience(index, { end: v })}
 				/>
 			</div>
 
@@ -91,14 +98,22 @@
 							rows={2}
 							oninput={(v) => doc.updateBullet(index, bi, v)}
 						/>
-						<button
-							type="button"
-							aria-label="Remove bullet"
-							onclick={() => doc.removeBullet(index, bi)}
-							class="mt-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-ink-muted hover:bg-accent-soft"
+						<ConfirmDialog
+							title="Remove highlight?"
+							description={`This highlight will be removed from "${item.role || 'Role ' + (index + 1)}".`}
+							onConfirm={() => doc.removeBullet(index, bi)}
 						>
-							<Fa icon={icons.dismiss} class="h-3.5 w-3.5" />
-						</button>
+							{#snippet children(open)}
+								<button
+									type="button"
+									aria-label="Remove highlight"
+									onclick={() => open()}
+									class="mt-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-danger transition-colors hover:bg-danger-soft"
+								>
+									<Fa icon={icons.trash} class="h-3.5 w-3.5" />
+								</button>
+							{/snippet}
+						</ConfirmDialog>
 					</div>
 				{/each}
 				<Button variant="ghost" icon={icons.create} onclick={() => doc.addBullet(index)}>

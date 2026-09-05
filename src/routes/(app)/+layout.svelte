@@ -9,7 +9,9 @@
 </script>
 
 <div class="flex min-h-screen flex-col">
-	<header class="border-b border-border">
+	<header
+		class="sticky top-0 z-40 border-b border-border/60 bg-surface/80 backdrop-blur-md print:hidden"
+	>
 		<div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
 			<a href={resolve('/dashboard')} class="text-sm font-semibold tracking-tight">CV Generator</a>
 			<nav class="flex items-center gap-3" aria-label="Application">
@@ -35,7 +37,7 @@
 	</header>
 
 	{#if data.settingsRequired}
-		<div class="border-b border-border bg-accent-soft">
+		<div class="animate-fade-in border-b border-border bg-accent-soft print:hidden">
 			<div
 				class="mx-auto flex w-full max-w-6xl items-start gap-3 px-6 py-3 text-sm leading-6"
 				role="status"
@@ -51,7 +53,7 @@
 		</div>
 	{/if}
 
-	<main class="flex-1">
+	<main class="flex-1 animate-fade-in-up">
 		{@render children()}
 	</main>
 </div>
