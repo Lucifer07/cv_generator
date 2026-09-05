@@ -81,6 +81,14 @@
 		if (!resp.ok) throw new Error('AI request failed');
 		return resp.text();
 	}
+
+	function applyEdits(actions: import('$lib/schemas/ai').EditAction[]): number {
+		let applied = 0;
+		for (const action of actions) {
+			if (doc.applyEdit(action)) applied += 1;
+		}
+		return applied;
+	}
 </script>
 
 <svelte:head>
@@ -186,6 +194,6 @@
 	</div>
 
 	{#if hasCredentials}
-		<AiChatAssistant onApplyStrategy={applyStrategy} />
+		<AiChatAssistant onApplyStrategy={applyStrategy} onApplyEdits={applyEdits} />
 	{/if}
 </div>

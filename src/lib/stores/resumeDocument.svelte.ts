@@ -6,6 +6,7 @@ import type {
 	ResumeData
 } from '$lib/schemas/resume';
 import { emptyResumeData, parseResumeContent } from '$lib/schemas/resume';
+import type { EditAction } from '$lib/schemas/ai';
 
 export type SaveState = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
 
@@ -215,6 +216,104 @@ export class ResumeDocument {
 			await this.#inflight;
 		} finally {
 			this.#inflight = null;
+		}
+	}
+
+	/**
+	 * Apply a structured edit action produced by the AI chat assistant.
+	 * Returns true when the action was applied; false when it was a no-op
+	 * (e.g. index out of range). Successful edits trigger autosave via the
+	 * existing mutation methods.
+	 */
+	applyEdit(action: EditAction): boolean {
+		switch (action.op) {
+			case 'set_basics': {
+				const fields = Object.fromEntries(
+					Object.entries(action.fields).filter(([, v]) => v !== undefined)
+				);
+				if (Object.keys(fields).length === 0) return false;
+				this.#basics = { ...this.#basics, ...fields };
+				this.#markDirty();
+				return true;
+			}
+			case 'set_summary': {
+				this.updateBasics('summary', action.value);
+				return true;
+			}
+			case 'add_experience': {
+				const item = { ...action.item, bullets: [...action.item.bullets] };
+				this.#experience = [...this.#experience, item];
+				this.#markDirty();
+				return true;
+			}
+			case 'update_experience': {
+				const target = this.#experience[action.index];
+				if (!target) return false;
+				const patch = Object.fromEntries(
+					Object.entries(action.item).filter(([, v]) => v !== undefined)
+				);
+				this.#experience = this.#experience.map((e, i) =>
+					i === action.index ? { ...target, ...patch } : e
+				);
+				this.#markDirty();
+				return true;
+			}
+			case 'remove_experience': {
+				if (!this.#experience[action.index]) return false;
+				this.removeExperience(action.index);
+				return true;
+			}
+			case 'add_education': {
+				this.#education = [...this.#education, { ...action.item }];
+				this.#markDirty();
+				return true;
+			}
+			case 'update_education': {
+				const target = this.#education[action.index];
+				if (!target) return false;
+				const patch = Object.fromEntries(
+					Object.entries(action.item).filter(([, v]) => v !== undefined)
+				);
+				this.#education = this.#education.map((e, i) =>
+					i === action.index ? { ...target, ...patch } : e
+				);
+				this.#markDirty();
+				return true;
+			}
+			case 'remove_education': {
+				if (!this.#education[action.index]) return false;
+				this.removeEducation(action.index);
+				return true;
+			}
+			case 'set_skills': {
+				this.#skills = action.items.map((s) => s.trim()).filter((s) => s.length > 0);
+				this.#markDirty();
+				return true;
+			}
+			case 'add_project': {
+				this.#projects = [...this.#projects, { ...action.item }];
+				this.#markDirty();
+				return true;
+			}
+			case 'update_project': {
+				const target = this.#projects[action.index];
+				if (!target) return false;
+				const patch = Object.fromEntries(
+					Object.entries(action.item).filter(([, v]) => v !== undefined)
+				);
+				this.#projects = this.#projects.map((p, i) =>
+					i === action.index ? { ...target, ...patch } : p
+				);
+				this.#markDirty();
+				return true;
+			}
+			case 'remove_project': {
+				if (!this.#projects[action.index]) return false;
+				this.removeProject(action.index);
+				return true;
+			}
+			default:
+				return false;
 		}
 	}
 

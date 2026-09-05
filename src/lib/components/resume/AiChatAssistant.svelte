@@ -2,19 +2,23 @@
 	import { onMount } from 'svelte';
 	import Fa from 'svelte-fa';
 	import { icons } from '$lib/icons';
+	import { parseAssistantResponse } from '$lib/schemas/ai';
 
 	interface Props {
 		onApplyStrategy: (
 			strategy: 'summary' | 'rewrite' | 'tailor' | 'review' | 'chat',
 			context?: Record<string, unknown>
 		) => Promise<string>;
+		onApplyEdits?: (actions: import('$lib/schemas/ai').EditAction[]) => number;
 		disabled?: boolean;
 	}
 
-	let { onApplyStrategy, disabled = false }: Props = $props();
+	let { onApplyStrategy, onApplyEdits, disabled = false }: Props = $props();
 
 	let open = $state(false);
-	let messages = $state<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+	let messages = $state<Array<{ role: 'user' | 'assistant'; content: string; applied?: number }>>(
+		[]
+	);
 	let input = $state('');
 	let streaming = $state(false);
 	let error = $state<string | null>(null);
@@ -80,7 +84,24 @@
 
 		try {
 			const result = await onApplyStrategy('chat', { customPrompt: text });
-			messages = [...messages, { role: 'assistant', content: result }];
+			const parsed = parseAssistantResponse(result);
+			if (parsed && onApplyEdits && parsed.actions.length > 0) {
+				const applied = onApplyEdits(parsed.actions);
+				messages = [
+					...messages,
+					{
+						role: 'assistant',
+						content:
+							parsed.reply +
+							(applied > 0
+								? `\n\n[Applied ${applied} change${applied === 1 ? '' : 's'} to your CV — saved automatically.]`
+								: '\n\n[No changes were applicable — please rephrase.]'),
+						applied
+					}
+				];
+			} else {
+				messages = [...messages, { role: 'assistant', content: result }];
+			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Action failed';
 			messages = [...messages, { role: 'assistant', content: `Error: ${error}` }];
@@ -151,6 +172,14 @@
 								? 'bg-accent text-surface'
 								: 'bg-surface-alt text-ink'}"
 						>
+							{#if typeof msg.applied === 'number' && msg.applied > 0}
+								<span
+									class="mb-1 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-surface"
+								>
+									<Fa icon={icons.success} class="h-2.5 w-2.5" />
+									{msg.applied} edit{msg.applied === 1 ? '' : 's'} applied
+								</span>
+							{/if}
 							{msg.content}
 						</div>
 					</div>

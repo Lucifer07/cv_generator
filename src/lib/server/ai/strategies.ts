@@ -20,35 +20,35 @@ const SYSTEM_BASE =
 
 function dataToMarkdown(data: ResumeData): string {
 	const lines: string[] = [];
-	if (data.basics.fullName) lines.push(`Name: ${data.basics.fullName}`);
-	if (data.basics.headline) lines.push(`Headline: ${data.basics.headline}`);
-	if (data.basics.email) lines.push(`Email: ${data.basics.email}`);
-	if (data.basics.summary) lines.push(`Summary: ${data.basics.summary}`);
-	for (const e of data.experience) {
-		if (!e.company && !e.role) continue;
+	if (data.basics.fullName) lines.push(`basics.fullName: ${data.basics.fullName}`);
+	if (data.basics.headline) lines.push(`basics.headline: ${data.basics.headline}`);
+	if (data.basics.email) lines.push(`basics.email: ${data.basics.email}`);
+	if (data.basics.phone) lines.push(`basics.phone: ${data.basics.phone}`);
+	if (data.basics.location) lines.push(`basics.location: ${data.basics.location}`);
+	if (data.basics.website) lines.push(`basics.website: ${data.basics.website}`);
+	if (data.basics.summary) lines.push(`basics.summary: ${data.basics.summary}`);
+	data.experience.forEach((e, i) => {
 		lines.push(
-			`Experience: ${e.role || 'Role'} at ${e.company || 'Company'} (${e.start || '?'}–${
+			`experience #${i}: ${e.role || 'Role'} at ${e.company || 'Company'} (${e.start || '?'}–${
 				e.current ? 'Present' : e.end || '?'
 			})`
 		);
-		for (const b of e.bullets) {
-			if (b.trim()) lines.push(`  - ${b}`);
-		}
-	}
-	for (const ed of data.education) {
-		if (!ed.institution && !ed.degree) continue;
+		e.bullets.forEach((b, bi) => {
+			if (b.trim()) lines.push(`  experience #${i} bullet ${bi}: ${b}`);
+		});
+	});
+	data.education.forEach((ed, i) => {
 		lines.push(
-			`Education: ${ed.degree || 'Degree'} at ${ed.institution || 'Institution'} (${
+			`education #${i}: ${ed.degree || 'Degree'} at ${ed.institution || 'Institution'} (${
 				ed.start || '?'
 			}–${ed.end || '?'})`
 		);
-	}
-	if (data.skills.length > 0) lines.push(`Skills: ${data.skills.join(', ')}`);
-	for (const p of data.projects) {
-		if (!p.name) continue;
-		lines.push(`Project: ${p.name}${p.link ? ` (${p.link})` : ''}`);
-		if (p.description) lines.push(`  ${p.description}`);
-	}
+	});
+	lines.push(`skills: [${data.skills.join(', ')}]`);
+	data.projects.forEach((p, i) => {
+		lines.push(`project #${i}: ${p.name || 'Project'}${p.link ? ` (${p.link})` : ''}`);
+		if (p.description) lines.push(`  project #${i} description: ${p.description}`);
+	});
 	return lines.join('\n');
 }
 
@@ -125,12 +125,33 @@ export function buildPrompt(req: StrategyRequest): {
 			if (!custom) throw new Error('A chat message is required.');
 			return {
 				system:
-					SYSTEM_BASE +
-					'\n\nYou are helping edit a resume. Use the resume data as context. ' +
-					'If the user asks to change something, propose the exact new text and explain briefly.',
+					"You are a resume editing assistant that can modify the user's resume directly. " +
+					'You MUST respond with ONE JSON object and nothing else — no markdown fences, ' +
+					'no prose outside the JSON — in exactly this shape:\n' +
+					'{ "reply": "<1-3 sentence explanation for the user>", "actions": [ ... ] }\n\n' +
+					'Available actions (indices refer to the #N numbers shown in the resume data, 0-based):\n' +
+					'- {"op":"set_basics","fields":{"fullName":"..","headline":"..","email":"..","phone":"..","location":"..","website":".."}}\n' +
+					'- {"op":"set_summary","value":".."}\n' +
+					'- {"op":"add_experience","item":{"company":"..","role":"..","start":"..","end":"..","current":false,"bullets":[".."]}}\n' +
+					'- {"op":"update_experience","index":0,"item":{"role":"..","bullets":[".."]}}\n' +
+					'- {"op":"remove_experience","index":0}\n' +
+					'- {"op":"add_education","item":{"institution":"..","degree":"..","start":"..","end":".."}}\n' +
+					'- {"op":"update_education","index":0,"item":{"degree":".."}}\n' +
+					'- {"op":"remove_education","index":0}\n' +
+					'- {"op":"set_skills","items":[".."]}\n' +
+					'- {"op":"add_project","item":{"name":"..","description":"..","link":".."}}\n' +
+					'- {"op":"update_project","index":0,"item":{"description":".."}}\n' +
+					'- {"op":"remove_project","index":0}\n\n' +
+					'Rules:\n' +
+					"1. Include ONLY the actions needed to fulfill the user's request.\n" +
+					'2. For update_* use a partial item containing only the fields to change.\n' +
+					'3. Write polished, ATS-friendly text with strong action verbs and quantified outcomes.\n' +
+					'4. For questions or reviews without changes, use "actions": [] and answer in "reply".\n' +
+					'5. Dates are plain strings like "2020-01" or "2019".\n' +
+					'6. The JSON must be valid: escape quotes and newlines inside strings.',
 				user: `Resume data:\n${resumeMd}\n\nUser request:\n${custom}`,
 				maxTokens: 3000,
-				temperature: 0.4
+				temperature: 0.2
 			};
 		}
 		case 'import': {
