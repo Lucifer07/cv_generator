@@ -1,6 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import { ResumeRepository } from '$lib/server/repositories/resume.repository';
+import { CredentialRepository } from '$lib/server/repositories/credential.repository';
+import { completeChat } from '$lib/server/ai';
+import { buildPrompt } from '$lib/server/ai/strategies';
+import { emptyResumeData } from '$lib/schemas/resume';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -24,7 +28,12 @@ export const actions: Actions = {
 			projects: []
 		};
 		const repo = new ResumeRepository(getDb());
-		const resume = await repo.create(locals.session.userId, title, seed);
+		let resume;
+		try {
+			resume = await repo.create(locals.session.userId, title, seed);
+		} catch {
+			return fail(409, { message: `A resume titled "${title}" already exists.` });
+		}
 		redirect(303, `/editor/${resume.id}`);
 	},
 
@@ -49,16 +58,63 @@ export const actions: Actions = {
 				message: 'Unsupported file type. Please upload a PDF, DOCX, or TXT document.'
 			});
 		}
+
+		const credential = await new CredentialRepository(getDb()).getCredential(locals.session.userId);
+		if (!credential) {
+			return fail(412, {
+				message: 'Import requires AI. Configure your AI endpoint and token in Settings first.'
+			});
+		}
+
 		const buffer = new Uint8Array(await file.arrayBuffer());
 		const { extractTextFromDocument } = await import('$lib/server/import/extract');
-		const { textToResumeData } = await import('$lib/server/import/parse');
+		const { resumeDataFromAiReply } = await import('$lib/server/import/parse');
+
 		const text = await extractTextFromDocument(buffer, file.type);
 		if (!text || text.trim().length < 5) {
 			return fail(422, { message: 'Could not extract text from the document.' });
 		}
-		const content = textToResumeData(text);
+
+		const prompt = buildPrompt({
+			strategy: 'import',
+			resume: emptyResumeData(),
+			context: { customPrompt: text }
+		});
+
+		let reply: string;
+		try {
+			reply = await completeChat(locals.session.userId, {
+				model: credential.model ?? undefined,
+				messages: [
+					{ role: 'system', content: prompt.system },
+					{ role: 'user', content: prompt.user }
+				],
+				max_tokens: prompt.maxTokens,
+				temperature: prompt.temperature
+			});
+		} catch (err) {
+			return fail(502, {
+				message: `AI request failed: ${err instanceof Error ? err.message : 'unknown error'}`
+			});
+		}
+
+		const content = resumeDataFromAiReply(reply);
+		if (!content) {
+			return fail(502, {
+				message:
+					'The AI reply could not be parsed into resume fields. Try again or use a different model.'
+			});
+		}
+
 		const repo = new ResumeRepository(getDb());
-		const resume = await repo.create(locals.session.userId, title, content);
+		let resume;
+		try {
+			resume = await repo.create(locals.session.userId, title, content);
+		} catch {
+			return fail(409, {
+				message: `A resume titled "${title}" already exists. Rename it or pick another title.`
+			});
+		}
 		redirect(303, `/editor/${resume.id}`);
 	},
 

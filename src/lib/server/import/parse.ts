@@ -1,70 +1,23 @@
 import type { ResumeData } from '$lib/schemas/resume';
+import { resumeDataSchema } from '$lib/schemas/resume';
 
 /**
- * Best-effort parser that turns raw extracted text (from PDF/DOCX) into a
- * structured ResumeData. It is deliberately tolerant: unmatched content is
- * folded into the summary. Users then refine fields in the editor.
+ * Parse the AI model's reply into ResumeData. Tolerates markdown fences and
+ * surrounding prose by extracting the outermost JSON object. Returns null if
+ * the reply does not contain schema-valid JSON.
  */
-export function textToResumeData(raw: string): ResumeData {
-	const lines = raw
-		.split(/\r?\n/)
-		.map((l) => l.trim())
-		.filter(Boolean);
-
-	const data: ResumeData = {
-		basics: {
-			fullName: '',
-			headline: '',
-			email: '',
-			phone: '',
-			location: '',
-			website: '',
-			summary: ''
-		},
-		experience: [],
-		education: [],
-		skills: [],
-		projects: []
-	};
-
-	const emailMatch = raw.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-	if (emailMatch) data.basics.email = emailMatch[0];
-
-	const phoneMatch = raw.match(/(\+?[\d\s().-]{8,})/);
-	if (phoneMatch) data.basics.phone = phoneMatch[1].trim();
-
-	const urlMatch = raw.match(/https?:\/\/[^\s]+/);
-	if (urlMatch) data.basics.website = urlMatch[0];
-
-	if (lines.length > 0) data.basics.fullName = lines[0];
-
-	// Heuristic: gather lines after a "SKILLS" header as comma-separated
-	const skillHeaderIdx = lines.findIndex((l) => /^skills?$/i.test(l));
-	if (skillHeaderIdx !== -1) {
-		let cursor = skillHeaderIdx + 1;
-		const skillChunks: string[] = [];
-		while (cursor < lines.length && !isSectionHeader(lines[cursor])) {
-			for (const part of lines[cursor].split(/[,•|]/)) {
-				const trimmed = part.trim();
-				if (trimmed) skillChunks.push(trimmed);
-			}
-			cursor += 1;
-		}
-		data.skills = skillChunks;
+export function resumeDataFromAiReply(reply: string): ResumeData | null {
+	const withoutFences = reply.replace(/```(?:json)?/gi, '');
+	const start = withoutFences.indexOf('{');
+	const end = withoutFences.lastIndexOf('}');
+	if (start === -1 || end === -1 || end <= start) return null;
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(withoutFences.slice(start, end + 1));
+	} catch {
+		return null;
 	}
-
-	// Everything else is folded into the summary
-	const reserved = new Set([data.basics.fullName, data.basics.email, ...data.skills]);
-	data.basics.summary = lines
-		.filter((l) => !reserved.has(l) && !isSectionHeader(l))
-		.slice(0, 12)
-		.join(' ');
-
-	return data;
-}
-
-function isSectionHeader(line: string): boolean {
-	return /^(summary|experience|education|skills|projects?|contact|education|profile|work\b)/i.test(
-		line
-	);
+	const result = resumeDataSchema.safeParse(parsed);
+	if (!result.success) return null;
+	return result.data;
 }

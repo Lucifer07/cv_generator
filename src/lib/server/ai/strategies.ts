@@ -1,6 +1,6 @@
 import type { ResumeData } from '$lib/schemas/resume';
 
-export type AiStrategy = 'summary' | 'rewrite' | 'tailor' | 'review' | 'chat';
+export type AiStrategy = 'summary' | 'rewrite' | 'tailor' | 'review' | 'chat' | 'import';
 
 export interface StrategyRequest {
 	strategy: AiStrategy;
@@ -131,6 +131,28 @@ export function buildPrompt(req: StrategyRequest): {
 				user: `Resume data:\n${resumeMd}\n\nUser request:\n${custom}`,
 				maxTokens: 800,
 				temperature: 0.4
+			};
+		}
+		case 'import': {
+			if (!custom) throw new Error('Raw resume text is required.');
+			return {
+				system:
+					'You are a resume parsing engine. Convert the resume text below into JSON that ' +
+					'exactly matches this TypeScript type:\n' +
+					'{\n' +
+					'  basics: { fullName, headline, email, phone, location, website, summary },\n' +
+					'  experience: [{ company, role, start, end, current, bullets: string[] }],\n' +
+					'  education: [{ institution, degree, start, end }],\n' +
+					'  skills: string[],\n' +
+					'  projects: [{ name, description, link }]\n' +
+					'}\n' +
+					'Rules: dates as plain strings (e.g. "2019-01" or "2019"); set current=true when ' +
+					'the role is ongoing; put achievement lines under bullets; write a 2-3 sentence ' +
+					'objective summary only if the text implies one, otherwise empty string. ' +
+					'Output ONLY the JSON object. No markdown fences, no commentary.',
+				user: 'Resume text:\n' + custom.slice(0, 12_000),
+				maxTokens: 1600,
+				temperature: 0.1
 			};
 		}
 	}

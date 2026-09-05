@@ -38,6 +38,23 @@ export async function streamChat(
 	return adapter.chat(cfg, req, signal);
 }
 
+export async function completeChat(userId: string, req: ChatRequest): Promise<string> {
+	const cfg = await loadCredential(userId);
+	if (!cfg) throw new Error('AI credentials are not configured.');
+	const upstream = await adapter.chat(cfg, req, new AbortController().signal);
+	const reader = upstream.getReader();
+	let out = '';
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		for (const choice of value.choices) {
+			const delta = choice.delta?.content ?? choice.message?.content ?? '';
+			if (delta) out += delta;
+		}
+	}
+	return out;
+}
+
 export function getAiRateLimitRpm(): number {
 	return getServerConfig().rateLimitRpm;
 }
