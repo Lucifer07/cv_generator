@@ -3,7 +3,7 @@ import { AiProviderAdapter, normalizeChatChunk } from './adapter';
 import type { ChatRequest, ChatResponse, CredentialConfig, VerifyResult } from './types';
 
 const CONNECT_TIMEOUT_MS = 30_000;
-const TOTAL_TIMEOUT_MS = 120_000;
+const TOTAL_TIMEOUT_MS = 300_000;
 const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 
 export class OpenAiCompatAdapter extends AiProviderAdapter {
