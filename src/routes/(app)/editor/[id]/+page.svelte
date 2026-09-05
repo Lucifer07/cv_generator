@@ -9,6 +9,7 @@
 	import SkillsSection from '$lib/components/resume/SkillsSection.svelte';
 	import ResumePreview from '$lib/components/resume/ResumePreview.svelte';
 	import AiPanel from '$lib/components/resume/AiPanel.svelte';
+	import AiChatAssistant from '$lib/components/resume/AiChatAssistant.svelte';
 	import { ResumeDocument } from '$lib/stores/resumeDocument.svelte';
 	import { icons } from '$lib/icons';
 	import type { PageData } from './$types';
@@ -79,6 +80,24 @@
 		const lastIndex = doc.experience.length - 1;
 		if (lastIndex < 0) return;
 		doc.updateExperience(lastIndex, { bullets: rewritten });
+	}
+
+	async function applyStrategy(
+		strategy: 'summary' | 'rewrite' | 'tailor' | 'review' | 'chat',
+		context?: Record<string, unknown>
+	): Promise<string> {
+		const resp = await fetch('/api/ai/chat', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				strategy,
+				resume: doc.data,
+				context,
+				model: defaultModel
+			})
+		});
+		if (!resp.ok) throw new Error('AI request failed');
+		return resp.text();
 	}
 </script>
 
@@ -232,4 +251,8 @@
 			<ResumePreview data={doc.data} />
 		</div>
 	</div>
+
+	{#if hasCredentials}
+		<AiChatAssistant onApplyStrategy={applyStrategy} />
+	{/if}
 </div>

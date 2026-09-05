@@ -1,6 +1,7 @@
 import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 import { faFileArrowDown } from '@fortawesome/free-solid-svg-icons/faFileArrowDown';
 import { faKey } from '@fortawesome/free-solid-svg-icons/faKey';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons/faPaperPlane';
 import { faPen } from '@fortawesome/free-solid-svg-icons/faPen';
 import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
 import { faSliders } from '@fortawesome/free-solid-svg-icons/faSliders';
@@ -19,7 +20,8 @@ export const icons = {
 	key: faKey,
 	warning: faTriangleExclamation,
 	success: faCheck,
-	dismiss: faXmark
+	dismiss: faXmark,
+	send: faPaperPlane
 } as const;
 
 export type IconName = keyof typeof icons;

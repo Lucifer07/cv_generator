@@ -7,13 +7,14 @@ import { getServerConfig } from '$lib/server/env';
 import type { RequestHandler } from './$types';
 
 const bodySchema = z.object({
-	strategy: z.enum(['summary', 'rewrite', 'tailor', 'review']),
+	strategy: z.enum(['summary', 'rewrite', 'tailor', 'review', 'chat']),
 	resume: resumeDataSchema,
 	context: z
 		.object({
 			targetRole: z.string().optional(),
 			jobDescription: z.string().optional(),
-			selectedBullets: z.array(z.string()).optional()
+			selectedBullets: z.array(z.string()).optional(),
+			customPrompt: z.string().optional()
 		})
 		.optional(),
 	model: z.string().optional()
